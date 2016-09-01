@@ -1,14 +1,14 @@
+extern crate cairo;
+extern crate gdk;
+extern crate gdk_sys;
 extern crate gtk;
 
-use std::io::Write;
 use gtk::prelude::*;
-use gtk::{Button, Window, WindowType};
+use gtk::{Button, DrawingArea, ScrolledWindow, Window, WindowType};
 
 fn main() {
     if gtk::init().is_err() {
-        writeln!(&mut std::io::stderr(), "Failed to initialize GTK.").unwrap();
-
-        std::process::exit(1);
+        panic!("Failed to initialize GTK.");
     }
 
     let window = Window::new(WindowType::Toplevel);
@@ -17,21 +17,61 @@ fn main() {
 
     window.set_default_size(500, 500);
 
-    let button = Button::new_with_label("Close");
+    let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
-    window.add(&button);
+    let button_box = gtk::ButtonBox::new(gtk::Orientation::Vertical);
+
+    let zoom_in_button = Button::new_with_label("Zoom In");
+
+    let zoom_out_button = Button::new_with_label("Zoom Out");
+
+    let area = DrawingArea::new();
+
+    let scroller = ScrolledWindow::new(None, None);
+
+    scroller.set_size_request(300, 300);
+
+    button_box.set_layout(gtk::ButtonBoxStyle::Start);
+
+    button_box.pack_start(&zoom_in_button, false, false, 0);
+
+    button_box.pack_start(&zoom_out_button, false, false, 0);
+
+    scroller.add(&area);
+
+    hbox.pack_start(&scroller, false, false, 0);
+
+    hbox.pack_start(&button_box, false, false, 0);
+
+    window.add(&hbox);
 
     window.show_all();
 
-    window.connect_delete_event(|_, _| {
+    window.connect_delete_event( move |_, _| {
         gtk::main_quit();
 
-        Inhibit(false)
+        Inhibit(true)
     });
 
-    button.connect_clicked(|_| {
-        gtk::main_quit();
+    area.connect_draw( move |_this, cr| {
+        for x in 0..300 as usize {
+            for y in 0..300 as usize {
+                let red : f64 = (((((x * y) + 100) % 255) % 256) as f64) / 255.0;
+                let blue : f64 = (((((x * y) + 200) % 255) % 256) as f64) / 255.0;
+                let green : f64 = (((((x * y) + 300) % 255) % 256) as f64) / 255.0;
+
+                cr.set_source_rgb(red, blue, green);
+
+                cr.rectangle(x as f64, y as f64, 1.0, 1.0);
+
+                cr.fill();
+            }
+        }
+
+        Inhibit(true)
     });
+
+    area.queue_draw();
 
     gtk::main();
 }

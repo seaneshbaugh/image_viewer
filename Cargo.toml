@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Sean Eshbaugh <seaneshbaugh@gmail.com>"]
 
 [dependencies]
+cairo-rs = "0.1.0"
+gdk = "0.5.0"
+gdk-sys = "0.3.1"
+glib = "0.1.0"
+rand = "0.3.14"
 
 [dependencies.gtk]
 version = "0.1.0"
