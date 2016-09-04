@@ -3,6 +3,8 @@ extern crate gdk;
 extern crate gdk_sys;
 extern crate gtk;
 
+use std::cell::Cell;
+use std::rc::Rc;
 use gtk::prelude::*;
 use gtk::{Button, DrawingArea, ScrolledWindow, Window, WindowType};
 
@@ -47,29 +49,77 @@ fn main() {
 
     window.show_all();
 
-    window.connect_delete_event( move |_, _| {
+    window.connect_delete_event(|_, _| {
         gtk::main_quit();
 
         Inhibit(true)
     });
 
-    area.connect_draw( move |_this, cr| {
-        for x in 0..300 as usize {
-            for y in 0..300 as usize {
-                let red : f64 = (((((x * y) + 100) % 255) % 256) as f64) / 255.0;
-                let blue : f64 = (((((x * y) + 200) % 255) % 256) as f64) / 255.0;
-                let green : f64 = (((((x * y) + 300) % 255) % 256) as f64) / 255.0;
+    let scale = Rc::new(Cell::new(1.0));
 
-                cr.set_source_rgb(red, blue, green);
+    {
+        let scale = scale.clone();
 
-                cr.rectangle(x as f64, y as f64, 1.0, 1.0);
+        zoom_in_button.connect_clicked(move |_| {
+            let mut s = scale.get();
 
-                cr.fill();
+            s += 0.1;
+
+            println!("{}", s);
+
+            scale.set(s);
+        });
+    }
+
+    {
+        let scale = scale.clone();
+
+        zoom_out_button.connect_clicked(move |_| {
+            let mut s = scale.get();
+
+            s -= 0.1;
+
+            println!("{}", s);
+
+            scale.set(s);
+        });
+    }
+
+    {
+        let scale = scale.clone();
+
+        area.connect_draw(move |this, cr| {
+            let s = scale.get();
+
+            let width : i32 = (s * (300 as f64)) as i32;
+
+            let height : i32 = (s * (300 as f64)) as i32;
+
+            this.set_size_request(width, height);
+
+            cr.scale(s, s);
+
+            cr.set_source_rgb(1.0, 1.0, 1.0);
+
+            cr.paint();
+
+            for x in 0..300 as usize {
+                for y in 0..300 as usize {
+                    let red : f64 = (((((x * y) + 100) % 255) % 256) as f64) / 255.0;
+                    let blue : f64 = (((((x * y) + 200) % 255) % 256) as f64) / 255.0;
+                    let green : f64 = (((((x * y) + 300) % 255) % 256) as f64) / 255.0;
+
+                    cr.set_source_rgb(red, blue, green);
+
+                    cr.rectangle(x as f64, y as f64, 1.0, 1.0);
+
+                    cr.fill();
+                }
             }
-        }
 
-        Inhibit(true)
-    });
+            Inhibit(true)
+        });
+    }
 
     area.queue_draw();
 
