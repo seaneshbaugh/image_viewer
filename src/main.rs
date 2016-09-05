@@ -4,20 +4,55 @@ extern crate gdk_sys;
 extern crate gtk;
 
 use std::cell::{Cell, RefCell};
+use std::env;
 use std::rc::Rc;
 use gtk::prelude::*;
 use gtk::{Button, DrawingArea, ScrolledWindow, Window, WindowType};
 
 fn main() {
+    let arguments: Vec<_> = env::args_os().collect();
+
+    if arguments.len() != 3 {
+        panic!("width and length required!");
+    }
+
     if gtk::init().is_err() {
         panic!("Failed to initialize GTK.");
     }
 
     let window = Window::new(WindowType::Toplevel);
 
+    let screen = WindowExt::get_screen(&window).unwrap();
+
+    let screen_width = screen.get_width();
+
+    let argument_width = arguments.get(1).unwrap().to_string_lossy().into_owned().parse::<i32>().unwrap();
+
+    let width = {
+        if argument_width > screen_width {
+            screen_width
+        } else {
+            argument_width
+        }
+    };
+
+    let screen_height = screen.get_height();
+
+    let argument_height = arguments.get(2).unwrap().to_string_lossy().into_owned().parse::<i32>().unwrap();
+
+    let height = {
+        if argument_height > screen_height {
+            screen_height
+        } else {
+            argument_height
+        }
+    };
+
+    println!("{} x {}", width, height);
+
     window.set_title("Image Viewer");
 
-    window.set_default_size(500, 500);
+    window.set_default_size(width, height);
 
     let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
