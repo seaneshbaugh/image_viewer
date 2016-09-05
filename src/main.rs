@@ -3,7 +3,7 @@ extern crate gdk;
 extern crate gdk_sys;
 extern crate gtk;
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use gtk::prelude::*;
 use gtk::{Button, DrawingArea, ScrolledWindow, Window, WindowType};
@@ -27,7 +27,7 @@ fn main() {
 
     let zoom_out_button = Button::new_with_label("Zoom Out");
 
-    let area = DrawingArea::new();
+    let area = Rc::new(RefCell::new(DrawingArea::new()));
 
     let scroller = ScrolledWindow::new(None, None);
 
@@ -39,7 +39,7 @@ fn main() {
 
     button_box.pack_start(&zoom_out_button, false, false, 0);
 
-    scroller.add(&area);
+    scroller.add(&*area.borrow());
 
     hbox.pack_start(&scroller, false, false, 0);
 
@@ -60,6 +60,8 @@ fn main() {
     {
         let scale = scale.clone();
 
+        let area = area.clone();
+
         zoom_in_button.connect_clicked(move |_| {
             let mut s = scale.get();
 
@@ -68,11 +70,15 @@ fn main() {
             println!("{}", s);
 
             scale.set(s);
+
+            area.borrow().queue_draw();
         });
     }
 
     {
         let scale = scale.clone();
+
+        let area = area.clone();
 
         zoom_out_button.connect_clicked(move |_| {
             let mut s = scale.get();
@@ -82,13 +88,17 @@ fn main() {
             println!("{}", s);
 
             scale.set(s);
+
+            area.borrow().queue_draw();
         });
     }
 
     {
         let scale = scale.clone();
 
-        area.connect_draw(move |this, cr| {
+        let area = area.clone();
+
+        area.borrow().connect_draw(move |this, cr| {
             let s = scale.get();
 
             let width : i32 = (s * (300 as f64)) as i32;
@@ -121,7 +131,7 @@ fn main() {
         });
     }
 
-    area.queue_draw();
+    area.borrow().queue_draw();
 
     gtk::main();
 }
