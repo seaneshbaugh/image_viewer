@@ -133,6 +133,59 @@ fn main() {
 
         let area = area.clone();
 
+        window.connect_key_release_event(move |_, key_event| {
+            let mut s = scale.get();
+
+            let key = key_event.get_keyval() as i32;
+
+            if key == gdk_sys::GDK_KEY_plus {
+                s += 0.1;
+            } else {
+                if key == gdk_sys::GDK_KEY_minus {
+                    s -= 0.1;
+                }
+            }
+
+            scale.set(s);
+
+            area.borrow().queue_draw();
+
+            Inhibit(false)
+        });
+    }
+
+
+    // {
+    //     let scale = scale.clone();
+
+    //     let area = area.clone();
+
+    //     window.connect_scroll_event(move |_, scroll_event| {
+    //         let mut s = scale.get();
+
+    //         let direction = scroll_event.as_ref().direction;
+
+    //         if direction == gdk_sys::GdkScrollDirection::Up {
+    //             s -= 0.1;
+    //         } else {
+    //             if direction == gdk_sys::GdkScrollDirection::Down {
+    //                 s += 0.1;
+    //             }
+    //         }
+
+    //         scale.set(s);
+
+    //         area.borrow().queue_draw();
+
+    //         Inhibit(false)
+    //     });
+    // }
+
+    {
+        let scale = scale.clone();
+
+        let area = area.clone();
+
         area.borrow().connect_draw(move |this, cr| {
             let s = scale.get();
 
