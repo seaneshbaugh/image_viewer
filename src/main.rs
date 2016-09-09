@@ -56,29 +56,15 @@ fn main() {
 
     let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
-    let button_box = gtk::ButtonBox::new(gtk::Orientation::Vertical);
-
-    let zoom_in_button = Button::new_with_label("Zoom In");
-
-    let zoom_out_button = Button::new_with_label("Zoom Out");
-
     let area = Rc::new(RefCell::new(DrawingArea::new()));
 
     let scroller = ScrolledWindow::new(None, None);
 
-    scroller.set_size_request(300, 300);
-
-    button_box.set_layout(gtk::ButtonBoxStyle::Start);
-
-    button_box.pack_start(&zoom_in_button, false, false, 0);
-
-    button_box.pack_start(&zoom_out_button, false, false, 0);
+    scroller.set_size_request(width, height);
 
     scroller.add(&*area.borrow());
 
     hbox.pack_start(&scroller, false, false, 0);
-
-    hbox.pack_start(&button_box, false, false, 0);
 
     window.add(&hbox);
 
@@ -91,42 +77,6 @@ fn main() {
     });
 
     let scale = Rc::new(Cell::new(1.0));
-
-    {
-        let scale = scale.clone();
-
-        let area = area.clone();
-
-        zoom_in_button.connect_clicked(move |_| {
-            let mut s = scale.get();
-
-            s += 0.1;
-
-            println!("{}", s);
-
-            scale.set(s);
-
-            area.borrow().queue_draw();
-        });
-    }
-
-    {
-        let scale = scale.clone();
-
-        let area = area.clone();
-
-        zoom_out_button.connect_clicked(move |_| {
-            let mut s = scale.get();
-
-            s -= 0.1;
-
-            println!("{}", s);
-
-            scale.set(s);
-
-            area.borrow().queue_draw();
-        });
-    }
 
     {
         let scale = scale.clone();
@@ -189,9 +139,9 @@ fn main() {
         area.borrow().connect_draw(move |this, cr| {
             let s = scale.get();
 
-            let width : i32 = (s * (300 as f64)) as i32;
+            let width : i32 = (s * (width as f64)) as i32;
 
-            let height : i32 = (s * (300 as f64)) as i32;
+            let height : i32 = (s * (height as f64)) as i32;
 
             this.set_size_request(width, height);
 
@@ -201,8 +151,8 @@ fn main() {
 
             cr.paint();
 
-            for x in 0..300 as usize {
-                for y in 0..300 as usize {
+            for x in 0..width as usize {
+                for y in 0..height as usize {
                     let red : f64 = (((((x * y) + 100) % 255) % 256) as f64) / 255.0;
                     let blue : f64 = (((((x * y) + 200) % 255) % 256) as f64) / 255.0;
                     let green : f64 = (((((x * y) + 300) % 255) % 256) as f64) / 255.0;
